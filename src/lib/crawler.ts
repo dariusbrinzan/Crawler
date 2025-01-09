@@ -10,9 +10,9 @@ export interface LinkItem {
 
 export async function crawlPAP(): Promise<LinkItem[]> {
   const urls = [
-    'https://www.edu.ro',
-    'https://www.mae.ro',
-    'https://www.madr.ro',
+    'https://www.onpcsb.ro/ro/a/184/program-anual-achizitii-publice-paap',
+    'https://ph.prefectura.mai.gov.ro/programul-anual-al-achizitiilor-publice/',
+    'https://mfe.gov.ro/informatii-de-interes-public/achizitii-publice/programul-anual-al-achizitiilor-publice/',
     'https://anap.gov.ro',
   ];
 
