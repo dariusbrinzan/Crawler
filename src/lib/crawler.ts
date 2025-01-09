@@ -17,7 +17,7 @@ export async function crawlPAP(): Promise<LinkItem[]> {
   ];
 
   const browser = await puppeteer.launch({
-    headless: true, // Pornește browser-ul în mod headless
+    headless: true,
   });
 
   const allData: LinkItem[] = [];
@@ -35,7 +35,6 @@ export async function crawlPAP(): Promise<LinkItem[]> {
       }))
     );
 
-    // Filtru pentru linkurile relevante
     const relevantLinks = links.filter(link => {
       const lowerText = link.text.toLowerCase();
       const lowerHref = link.href.toLowerCase();
@@ -48,7 +47,6 @@ export async function crawlPAP(): Promise<LinkItem[]> {
       );
     });
 
-    // Mapăm rezultatele într-un format structurat
     relevantLinks.forEach(link => {
       allData.push({
         site,
@@ -68,6 +66,5 @@ export async function crawlPAP(): Promise<LinkItem[]> {
 
   await browser.close();
 
-  // Eliminăm duplicatele
   return Array.from(new Map(allData.map(item => [item.url, item])).values());
 }
