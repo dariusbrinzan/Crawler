@@ -37,32 +37,25 @@ export default function Home() {
       >
         <thead>
           <tr>
-            <th>Site</th>
-            <th>Text Link</th>
+            <th>Site administrație</th>
+            <th>Titlu</th>
             <th>URL</th>
+            <th>Format document</th>
+            <th>Dată colectare</th>
           </tr>
         </thead>
         <tbody>
           {papData.map((item, idx) => (
             <tr key={idx}>
               <td>{item.site}</td>
-              <td>{item.text}</td>
+              <td>{item.title}</td>
               <td>
-                {item.href.startsWith("http") ? (
-                  <a href={item.href} target="_blank" rel="noopener noreferrer">
-                    {item.href}
-                  </a>
-                ) : (
-                  <a
-                    href={`${item.site}${item.href}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {item.site}
-                    {item.href}
-                  </a>
-                )}
+                <a href={item.url} target="_blank" rel="noopener noreferrer">
+                  {item.url}
+                </a>
               </td>
+              <td>{item.format}</td>
+              <td>{item.date}</td>
             </tr>
           ))}
         </tbody>

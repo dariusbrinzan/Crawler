@@ -1,16 +1,14 @@
-// src/lib/crawler.ts
-import axios from 'axios';
-import https from 'https';
-import * as cheerio from 'cheerio';
+import puppeteer from 'puppeteer';
 
 export interface LinkItem {
   site: string;
-  text: string;
-  href: string;
+  title: string;
+  url: string;
+  format: string;
+  date: string;
 }
 
 export async function crawlPAP(): Promise<LinkItem[]> {
-  // Alege site-urile care n-au dat erori mari
   const urls = [
     'https://www.edu.ro',
     'https://www.mae.ro',
@@ -18,36 +16,58 @@ export async function crawlPAP(): Promise<LinkItem[]> {
     'https://anap.gov.ro',
   ];
 
-  // Agent care ignoră certificatele SSL
-  const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+  const browser = await puppeteer.launch({
+    headless: true, // Pornește browser-ul în mod headless
+  });
 
   const allData: LinkItem[] = [];
+  const today = new Date().toISOString().split('T')[0];
 
   for (const site of urls) {
-    try {
-      // Facem request la site
-      const { data } = await axios.get(site, { httpsAgent });
+    const page = await browser.newPage();
+    await page.goto(site, { waitUntil: 'domcontentloaded' });
 
-      // Parsăm HTML cu Cheerio
-      const $ = cheerio.load(data);
+    // Extragem toate linkurile și informațiile relevante
+    const links = await page.$$eval('a', anchors =>
+      anchors.map(anchor => ({
+        href: anchor.href,
+        text: anchor.textContent?.trim() || '',
+      }))
+    );
 
-      // De test: extragem TOATE link-urile <a>, apoi le filtrezi ulterior
-      const links = $('a');
-      const siteData: LinkItem[] = [];
+    // Filtru pentru linkurile relevante
+    const relevantLinks = links.filter(link => {
+      const lowerText = link.text.toLowerCase();
+      const lowerHref = link.href.toLowerCase();
+      return (
+        lowerText.includes('achizi') ||
+        lowerText.includes('licitat') ||
+        lowerHref.includes('achizi') ||
+        lowerHref.includes('licitat') ||
+        lowerHref.includes('publice')
+      );
+    });
 
-      links.each((_, el) => {
-        siteData.push({
-          site,
-          text: $(el).text().trim(),
-          href: $(el).attr('href') || '',
-        });
+    // Mapăm rezultatele într-un format structurat
+    relevantLinks.forEach(link => {
+      allData.push({
+        site,
+        title: link.text,
+        url: link.href.startsWith('http') ? link.href : `${site}${link.href}`,
+        format: link.href.endsWith('.pdf')
+          ? 'PDF'
+          : link.href.endsWith('.doc') || link.href.endsWith('.docx')
+          ? 'DOC'
+          : 'Altul',
+        date: today,
       });
+    });
 
-      allData.push(...siteData);
-    } catch (error: any) {
-      console.error(`Eroare la accesarea site-ului ${site}:`, error.message);
-    }
+    await page.close();
   }
 
-  return allData;
+  await browser.close();
+
+  // Eliminăm duplicatele
+  return Array.from(new Map(allData.map(item => [item.url, item])).values());
 }
